@@ -47,6 +47,8 @@ DMA_HandleTypeDef hdma_tim1_ch1;
 
 /* USER CODE BEGIN PV */
 
+uint8_t FLAG_ChangePattern = 0;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -105,6 +107,13 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
+
+	  // List the patterns you want to cycle through
+
+	  pureRed();
+	  pureGreen();
+	  pureBlue();
+	  swapRedGreen();
 
     /* USER CODE BEGIN 3 */
   }
@@ -342,6 +351,8 @@ static void MX_GPIO_Init(void)
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	if (GPIO_Pin == GPIO_PIN_7) {
 		// Code for what interrupt does goes here
+		// Set the flag to change the pattern. This should exit out of the current infinite while loop.
+		FLAG_ChangePattern = 1;
 		// Change colour pattern, so I guess increment/wrap a (global?) pattern index variable?
 	} else {
 		__NOP();
