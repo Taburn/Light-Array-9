@@ -49,6 +49,8 @@ DMA_HandleTypeDef hdma_tim1_ch1;
 
 /* USER CODE BEGIN PV */
 
+
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -64,12 +66,11 @@ static void MX_ADC1_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-uint8_t FLAG_ChangePattern = 0;
-uint8_t FLAG_DataSent = 0;
+volatile uint8_t FLAG_ChangePattern = 0;
+volatile uint8_t FLAG_DataSent = 0;
 
 uint8_t LED_Data[MAX_LED][3];  // 3 colors
 uint16_t pwmData[(24*MAX_LED)+600];  // 600 = 300 zeros before and after actual data
-
 
 /* Name		set_LED
  * Desc.	!TODO
@@ -125,24 +126,79 @@ void WS2812C_Send(void) {
 
 	// Start DMA and wait until it's done
 	HAL_TIM_PWM_Start_DMA(&htim1, TIM_CHANNEL_1, (uint32_t*) pwmData, index);
-	while (!FLAG_DataSent) {
-	};
+	while (!FLAG_DataSent) {};
 	FLAG_DataSent = 0;
 
 }
 
 void cycle_RGB(void) {
-	set_all_LED(255, 0, 0);
-	WS2812C_Send();
-	HAL_Delay(500);
+	while (1) {
+		set_all_LED(255, 0, 0);
+		WS2812C_Send();
+		HAL_Delay(500);
+		if(FLAG_ChangePattern == 1){break;}
 
-	set_all_LED(0, 255, 0);
-	WS2812C_Send();
-	HAL_Delay(500);
+		set_all_LED(0, 255, 0);
+		WS2812C_Send();
+		HAL_Delay(500);
+		if(FLAG_ChangePattern == 1){break;}
 
-	set_all_LED(0, 0, 255);
-	WS2812C_Send();
-	HAL_Delay(500);
+		set_all_LED(0, 0, 255);
+		WS2812C_Send();
+		HAL_Delay(500);
+		if(FLAG_ChangePattern == 1){break;}
+	}
+}
+
+// Based on this image https://en.wikipedia.org/wiki/HSL_and_HSV#/media/File:HSV-RGB-comparison.svg
+// Hue range is 0 - 1,535 ((256*6)-1)
+void HuetoRGB(uint8_t LEDnum, uint16_t Hue) {
+	// The rainbow is broken up into 6 bins, defined by when R, G, B start increasing or decreasing
+
+	if(Hue > 1535) {
+		Hue = Hue - 1536;
+	}
+
+	uint8_t Red = 0;
+	uint8_t Green = 0;
+	uint8_t Blue = 0;
+
+	uint8_t Bin = Hue / 256; // The rainbow is broken up into 6 bins, defined by when R, G, B start increasing or decreasing
+	uint8_t x = Hue % 256;  // How far along the bin you are
+
+	switch (Bin) {
+	case 0:
+		Red = 255;
+		Green = x;
+		break;
+	case 1:
+		Green = 255;
+		Red = 255 - x;
+		break;
+	case 2:
+		Green = 255;
+		Blue = x;
+		break;
+	case 3:
+		Blue = 255;
+		Green = 255 - x;
+		break;
+	case 4:
+		Blue = 255;
+		Red = x;
+		break;
+	case 5:
+		Red = 255;
+		Blue = 255 - x;
+		break;
+	default:
+		Red = 255;
+		Green = 255;
+		Blue = 255;
+	}
+
+	set_LED(LEDnum, Red, Green, Blue);
+
 }
 
 // implements a rainbow gradient as per
@@ -214,56 +270,33 @@ void Rainbow(void) {
 
 }
 
-// Based on this image https://en.wikipedia.org/wiki/HSL_and_HSV#/media/File:HSV-RGB-comparison.svg
-// Hue range is 0 - 1,535 ((256*6)-1)
-void HuetoRGB(uint8_t LEDnum, uint16_t Hue) {
-	// The rainbow is broken up into 6 bins, defined by when R, G, B start increasing or decreasing
+void GradientRainbowDiag(void) {
+	while (1) {
+		for (uint16_t i = 0; i < 1536; i++) {
+			HuetoRGB(2, i + 160);
 
-	if(Hue > 1535) {
-		Hue = Hue - 1536;
+			HuetoRGB(1, i + 120);
+			HuetoRGB(5, i + 120);
+
+			HuetoRGB(0, i + 80);
+			HuetoRGB(4, i + 80);
+			HuetoRGB(8, i + 80);
+
+			HuetoRGB(3, i + 40);
+			HuetoRGB(7, i + 40);
+
+			HuetoRGB(6, i);
+
+			WS2812C_Send();
+			HAL_Delay(20);
+
+			if(FLAG_ChangePattern == 1){break;}
+		}
+		if(FLAG_ChangePattern == 1){break;}
 	}
-
-	uint8_t Red = 0;
-	uint8_t Green = 0;
-	uint8_t Blue = 0;
-
-	uint8_t Bin = Hue / 256; // The rainbow is broken up into 6 bins, defined by when R, G, B start increasing or decreasing
-	uint8_t x = Hue % 256;  // How far along the bin you are
-
-	switch (Bin) {
-	case 0:
-		Red = 255;
-		Green = x;
-		break;
-	case 1:
-		Green = 255;
-		Red = 255 - x;
-		break;
-	case 2:
-		Green = 255;
-		Blue = x;
-		break;
-	case 3:
-		Blue = 255;
-		Green = 255 - x;
-		break;
-	case 4:
-		Blue = 255;
-		Red = x;
-		break;
-	case 5:
-		Red = 255;
-		Blue = 255 - x;
-		break;
-	default:
-		Red = 255;
-		Green = 255;
-		Blue = 255;
-	}
-
-	set_LED(LEDnum, Red, Green, Blue);
-
 }
+
+
 
 
 
@@ -310,24 +343,11 @@ int main(void)
   while (1)
   {
 
-	  for (uint16_t i = 0; i < 1536; i++) {
-			HuetoRGB(2, i + 160);
+	  GradientRainbowDiag();
+	  FLAG_ChangePattern = 0;
+	  cycle_RGB();
+	  FLAG_ChangePattern = 0;
 
-			HuetoRGB(1, i + 120);
-			HuetoRGB(5, i + 120);
-
-			HuetoRGB(0, i + 80);
-			HuetoRGB(4, i + 80);
-			HuetoRGB(8, i + 80);
-
-			HuetoRGB(3, i + 40);
-			HuetoRGB(7, i + 40);
-
-			HuetoRGB(6, i);
-
-			WS2812C_Send();
-			HAL_Delay(20);
-		}
 
     /* USER CODE END WHILE */
 
@@ -569,7 +589,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 		// Code for what interrupt does goes here
 		// Set the flag to change the pattern. This should exit out of the current infinite while loop.
 		FLAG_ChangePattern = 1;
-		// Change colour pattern, so I guess increment/wrap a (global?) pattern index variable?
+		// Change color pattern, so I guess increment/wrap a (global?) pattern index variable?
 	} else {
 		__NOP();
 	}
