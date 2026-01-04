@@ -47,7 +47,7 @@ DMA_HandleTypeDef hdma_tim1_ch1;
 
 /* USER CODE BEGIN PV */
 
-
+volatile uint8_t FLAG_BTN = 0;
 
 /* USER CODE END PV */
 
@@ -117,7 +117,6 @@ int main(void)
 
 
 
-
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -127,28 +126,18 @@ int main(void)
 
 		set_colour_whole_frame(frame, Red);
 		send_frame(frame);
-		HAL_Delay(1000);
-
-		set_colour_whole_frame(frame, Yellow);
-		send_frame(frame);
-		HAL_Delay(1000);
-
-		set_colour_whole_frame(frame, Green);
-		send_frame(frame);
-		HAL_Delay(1000);
-
-		set_colour_whole_frame(frame, Cyan);
-		send_frame(frame);
-		HAL_Delay(1000);
+		HAL_Delay(500);
 
 		set_colour_whole_frame(frame, Blue);
 		send_frame(frame);
-		HAL_Delay(1000);
+		HAL_Delay(500);
 
-		set_colour_whole_frame(frame, Purple);
-		send_frame(frame);
-		HAL_Delay(1000);
-
+		if (FLAG_BTN) {
+			set_colour_whole_frame(frame, Green);
+			send_frame(frame);
+			HAL_Delay(1000);
+			FLAG_BTN = 0;
+		}
 
     /* USER CODE END WHILE */
 
@@ -385,13 +374,10 @@ static void MX_GPIO_Init(void)
 
 
 // Code that triggers when the button interrupt happens
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-	if (GPIO_Pin == GPIO_PIN_7) {
-		// Code for what interrupt does goes here
-		// Set the flag to change the pattern. This should exit out of the current infinite while loop.
-		// Change color pattern, so I guess increment/wrap a (global?) pattern index variable?
-		__NOP();
+void HAL_GPIO_EXTI_Rising_Callback(uint16_t GPIO_Pin) {
 
+	if (GPIO_Pin == GPIO_PIN_7) {
+		FLAG_BTN = 1;
 	} else {
 		__NOP();
 	}
