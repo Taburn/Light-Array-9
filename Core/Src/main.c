@@ -33,11 +33,6 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 
-
-#define DISPLAY_WIDTH  3
-#define DISPLAY_HEIGHT 3
-#define MAX_LED        9
-
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -47,7 +42,6 @@
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
-
 TIM_HandleTypeDef htim1;
 DMA_HandleTypeDef hdma_tim1_ch1;
 
@@ -69,11 +63,6 @@ static void MX_ADC1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
-//volatile uint8_t FLAG_ChangePattern = 0;
-
-
-uint8_t LED_Data[MAX_LED][3];  // 3 colors
 
 
 /* Name		set_LED
@@ -122,6 +111,15 @@ int main(void)
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
 
+
+  struct Colour frame[NUM_LEDS];
+  clear_frame(frame);
+
+  struct Colour Red = create_colour (255, 0, 0);
+  struct Colour Green = create_colour (0, 255, 0);
+  struct Colour Blue = create_colour (0, 0, 255);
+
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -129,7 +127,18 @@ int main(void)
   while (1)
   {
 
-	  GradientRainbowDiag();
+		set_colour_whole_frame(frame, Red);
+		send_frame(frame);
+		HAL_Delay(1000);
+
+		set_colour_whole_frame(frame, Green);
+		send_frame(frame);
+		HAL_Delay(1000);
+
+		set_colour_whole_frame(frame, Blue);
+		send_frame(frame);
+		HAL_Delay(1000);
+
 
     /* USER CODE END WHILE */
 

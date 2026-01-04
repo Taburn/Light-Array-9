@@ -30,14 +30,9 @@
  */
 
 #include "lib_WS2812C.h"
+#include "main.h"
 
-
-// Defines a struct that holds 3x 8-bit colour values
-struct Colour {
-	uint8_t Red;
-	uint8_t Green;
-	uint8_t Blue;
-};
+volatile uint8_t FLAG_DataSent = 0;
 
 
 // A function that returns an instance of a Colour struct with defined RGB values
@@ -53,55 +48,54 @@ struct Colour create_colour (uint8_t Red, uint8_t Green, uint8_t Blue) {
 }
 
 
-// Returns an array of blank colour structs the size of your display
-struct Colour make_blank_frame(uint32_t num_LEDs) {
-
-	struct Colour image_frame[num_LEDs];
-
-	for (int i = 0; i < num_LEDs; i++) {
-		image_frame[i] = create_colour(0, 0, 0);
+// Fills the pointed to array with zeroes
+void clear_frame(struct Colour *frame) {
+	for (size_t i = 0; i < NUM_LEDS; i++) {
+		frame[i] = create_colour(0, 0, 0);
 	}
-
-	return image_frame;
 }
 
 
 // Arrays are passed to functions as a pointer to that array.
 // Functions modify the the original array, not a copy of it you pass in.
 // Therefore there's nothing to return
-void set_colour_all_frame(Colour *frame, size_t num_LEDs, Colour desired_colour) {
+void set_colour_whole_frame(struct Colour *frame, struct Colour desired_colour) {
 
-	for (size_t i = 0; i < num_LEDs; i++){
+	for (size_t i = 0; i < NUM_LEDS; i++){
 		frame[i] = desired_colour;
 	}
 }
 
 
-void send_frame(Colour *frame, size_t num_LEDs) {
+void send_frame(struct Colour *frame) {
 
-	uint16_t pwmData[(24*num_LEDs)+600];  // 24 = 24 bits of colour data for each LED
-	                                      // 600 = 300 zeros before and after actual data to hold data line low
-	                                      //          needed for timing requirements
+	static uint16_t pwmData[(24*NUM_LEDS)+600];  // 24  = 24 bits of colour data for each LED
+	                                             // 600 = 300 zeros before and after actual data to hold data line low
+	                                             //       needed for timing requirements
 
 	uint32_t index = 0;    // Keeps track of our current place writing data to pwmData
 
-	// Set first 300 elements of pwmData to 0% duty cycles to keep line low for the latch command
+	// Set first 300 elements of pwmData to 0% duty cycles to keep line low for the latch command (reset LEDs)
 	for (uint16_t i = 0; i < 300; i++) {
 		pwmData[index] = 0;
 		index++;
 	}
 
-	uint32_t color;      // color data is 24 bits
+	uint32_t color;      // color data is 24 bits. Will hold all the RGB bits.
 
-	for (uint32_t LED = 0; LED < num_LEDs; LED++) {     // for each LED
-		color = ((frame[LED].Green << 16) | (frame[LED].Red << 8) | (frame[LED].Blue)); // Concatenate color values into a single string
-		for (uint8_t bit = 23; bit >= 0; bit--) {    // for each bit of color values
+	for (uint32_t LED = 0; LED < NUM_LEDS; LED++) {     // for each LED
+
+		// Concatenate color values into a single string
+		color = (((uint32_t)frame[LED].Green << 16) |
+				 ((uint32_t)frame[LED].Red   << 8 ) |
+				 ((uint32_t)frame[LED].Blue));
+
+		for (int bit = 23; bit >= 0; bit--) {    // for each bit of color values
 			if (color & (1 << bit)) {
 				pwmData[index] = 30;   // 50% duty cycle
 			} else {
 				pwmData[index] = 15;   // 25% duty cycle
 			}
-
 			index++;
 		}
 	}
@@ -119,17 +113,15 @@ void send_frame(Colour *frame, size_t num_LEDs) {
 
 }
 
+void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim) {
+	FLAG_DataSent = 1;
+}
+
 
 // ############################################################################
 
-
 /*
- * Function: make_single_colour_array
- * Inputs:   numLEDs            the number of LEDs you're controlling
- *           Red, Green, Blue   The colour you want all the LEDs to be
- * Outputs:  LED_Data           returns an array of Colour structs filled with the input colour
- * Desc.:    Used to set all the !TODO
- */
+
 struct Colour make_single_colour_array(uint8_t numLEDs, uint8_t Red, uint8_t Green, uint8_t Blue) {
 
 	struct Colour LED_Data[numLEDs];
@@ -151,12 +143,6 @@ volatile uint8_t FLAG_DataSent = 0;
 // Based on this image https://en.wikipedia.org/wiki/HSL_and_HSV#/media/File:HSV-RGB-comparison.svg
 // Hue range is 0 - 1,535 ((256*6)-1)
 
-
-/*
- * Function: HuetoRGB
- * Inputs:   Hue   uint16_t     Range: 0 - 1,535 ((256*6)-1)
- * Outputs:  RGB
- */
 
 
 void HuetoRGB(uint8_t LEDnum, uint16_t Hue) {
@@ -222,9 +208,7 @@ void set_all_LED(uint8_t Red, uint8_t Green, uint8_t Blue) {
 
 
 
-void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim) {
-	FLAG_DataSent = 1;
-}
+
 
 // Patterns
 // Should be able to remove this section of the library
@@ -341,3 +325,5 @@ void GradientRainbowDiag(void) {
 	}
 }
 
+
+*/
