@@ -33,6 +33,14 @@ void set_colour_whole_frame(struct Colour *frame, struct Colour desired_colour);
 void send_frame(struct Colour *frame);
 void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim);
 
+// Colour Definitions
+
+extern const struct Colour Red;
+extern const struct Colour Green;
+extern const struct Colour Blue;
+extern const struct Colour Yellow;
+extern const struct Colour Purple;
+extern const struct Colour Cyan;
 
 // Patterns
 /*

@@ -118,6 +118,14 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim) {
 }
 
 
+//                              R    G    B
+const struct Colour Red    = {255,   0,   0};
+const struct Colour Green  = {  0, 255,   0};
+const struct Colour Blue   = {  0,   0, 255};
+const struct Colour Yellow = {255,  90,   0};
+const struct Colour Purple = {255,   0, 150};
+const struct Colour Cyan   = {  0, 255, 255};
+
 // ############################################################################
 
 /*

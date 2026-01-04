@@ -115,9 +115,7 @@ int main(void)
   struct Colour frame[NUM_LEDS];
   clear_frame(frame);
 
-  struct Colour Red = create_colour (255, 0, 0);
-  struct Colour Green = create_colour (0, 255, 0);
-  struct Colour Blue = create_colour (0, 0, 255);
+
 
 
   /* USER CODE END 2 */
@@ -131,11 +129,23 @@ int main(void)
 		send_frame(frame);
 		HAL_Delay(1000);
 
+		set_colour_whole_frame(frame, Yellow);
+		send_frame(frame);
+		HAL_Delay(1000);
+
 		set_colour_whole_frame(frame, Green);
 		send_frame(frame);
 		HAL_Delay(1000);
 
+		set_colour_whole_frame(frame, Cyan);
+		send_frame(frame);
+		HAL_Delay(1000);
+
 		set_colour_whole_frame(frame, Blue);
+		send_frame(frame);
+		HAL_Delay(1000);
+
+		set_colour_whole_frame(frame, Purple);
 		send_frame(frame);
 		HAL_Delay(1000);
 
