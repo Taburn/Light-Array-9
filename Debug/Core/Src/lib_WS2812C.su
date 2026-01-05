@@ -1,5 +1,9 @@
-../Core/Src/lib_WS2812C.c:39:15:create_colour	32	static
-../Core/Src/lib_WS2812C.c:52:6:clear_frame	32	static
-../Core/Src/lib_WS2812C.c:62:6:set_colour_whole_frame	24	static
-../Core/Src/lib_WS2812C.c:70:6:send_frame	40	static
-../Core/Src/lib_WS2812C.c:116:6:HAL_TIM_PWM_PulseFinishedCallback	16	static
+../Core/Src/lib_WS2812C.c:39:15:create_colour	8	static
+../Core/Src/lib_WS2812C.c:52:6:clear_frame	0	static
+../Core/Src/lib_WS2812C.c:60:15:HuetoRGB	16	static
+../Core/Src/lib_WS2812C.c:112:6:set_colour_whole_frame	24	static
+../Core/Src/lib_WS2812C.c:119:6:set_colour_LED	16	static
+../Core/Src/lib_WS2812C.c:123:6:send_frame	24	static
+../Core/Src/lib_WS2812C.c:169:6:HAL_TIM_PWM_PulseFinishedCallback	0	static
+../Core/Src/lib_WS2812C.c:191:6:Pattern_cycle_RGB	16	static
+../Core/Src/lib_WS2812C.c:214:6:Pattern_RainbowGradient	40	static

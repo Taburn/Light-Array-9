@@ -64,17 +64,6 @@ static void MX_ADC1_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-
-/* Name		set_LED
- * Desc.	!TODO
- * Inputs	LEDnum	(0 to MAX_LED-1)	number of the LED you want to set the color for
- * 			Red		0 to 255			how much of the color you want
- * 			Green	0 to 255			how much of the color you want
- * 			Blue	0 to 255			how much of the color you want
- */
-
-
-
 /* USER CODE END 0 */
 
 /**
@@ -121,23 +110,15 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
+	while (1) {
 
-		set_colour_whole_frame(frame, Red);
-		send_frame(frame);
-		HAL_Delay(500);
+		Pattern_RainbowGradient(frame);
+		FLAG_BTN = 0;
 
-		set_colour_whole_frame(frame, Blue);
-		send_frame(frame);
-		HAL_Delay(500);
+		Pattern_cycle_RGB(frame);
+		FLAG_BTN = 0;
+		// !TODO Create custom delay function that checks for FLAG_BTN?
 
-		if (FLAG_BTN) {
-			set_colour_whole_frame(frame, Green);
-			send_frame(frame);
-			HAL_Delay(1000);
-			FLAG_BTN = 0;
-		}
 
     /* USER CODE END WHILE */
 

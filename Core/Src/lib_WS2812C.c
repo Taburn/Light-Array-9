@@ -16,16 +16,11 @@
  *
  * What functionality do I need?
  *  [x] Need to create an image frame (an array that has all the colour data for each LED), initialized to black
- *  [ ] Need a way to change an individual LED in that frame, defined by LED index
+ *  [-] Need a way to change an individual LED in that frame, defined by LED index
+ *      - This is done without a function, by just writing a Colour struct directly to the frame array
  *  [ ] Need a way to change an individual LED in that frame, defined by x,y coordinates (hard to make generalized to diff displays)
  *  [x] Need a way to set the entire frame to a single colour
- *  [ ] Need a way to write image frame to LED display
- *
- *  - Somewhere to define the parameters of the LED display I'm using (each programmer does this in main.c)
- *  	display_width   The number of LEDs horizontally
- *  	display_height  The number of LEDs vertically
- *  	MAX_LED         The total number of LEDs in the display (would be display_width * display_height)
- *
+ *  [x] Need a way to write image frame to LED display
  *
  */
 
@@ -55,6 +50,56 @@ void clear_frame(struct Colour *frame) {
 	}
 }
 
+// Based on this image https://en.wikipedia.org/wiki/HSL_and_HSV#/media/File:HSV-RGB-comparison.svg
+// Hue range is 0 - 1,535 ((256*6)-1)
+struct Colour HuetoRGB(uint16_t Hue) {
+	// The rainbow is broken up into 6 bins, defined by when R, G, B start increasing or decreasing
+
+	// overflow correction
+	Hue %= 1536;
+
+	uint8_t Red   = 0;
+	uint8_t Green = 0;
+	uint8_t Blue  = 0;
+
+	uint8_t Bin = Hue / 256; // The rainbow is broken up into 6 bins, defined by when R, G, B start increasing or decreasing
+	uint8_t x = Hue % 256;  // How far along the bin you are
+
+	switch (Bin) {
+	case 0:
+		Red = 255;
+		Green = x;
+		break;
+	case 1:
+		Green = 255;
+		Red = 255 - x;
+		break;
+	case 2:
+		Green = 255;
+		Blue = x;
+		break;
+	case 3:
+		Blue = 255;
+		Green = 255 - x;
+		break;
+	case 4:
+		Blue = 255;
+		Red = x;
+		break;
+	case 5:
+		Red = 255;
+		Blue = 255 - x;
+		break;
+	default:         // default case should be unreachable, but included for debugging
+		Red = 0;
+		Green = 0;
+		Blue = 0;
+	}
+
+	struct Colour return_colour = {.Red=Red, .Green=Green, .Blue=Blue};
+	return return_colour;
+}
+
 
 // Arrays are passed to functions as a pointer to that array.
 // Functions modify the the original array, not a copy of it you pass in.
@@ -66,6 +111,9 @@ void set_colour_whole_frame(struct Colour *frame, struct Colour desired_colour) 
 	}
 }
 
+void set_colour_LED(struct Colour *frame, uint32_t LED_number, struct Colour desired_colour) {
+	frame[LED_number] = desired_colour;
+}
 
 void send_frame(struct Colour *frame) {
 
@@ -117,7 +165,7 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim) {
 	FLAG_DataSent = 1;
 }
 
-
+// Predefined colours
 //                              R    G    B
 const struct Colour Red    = {255,   0,   0};
 const struct Colour Green  = {  0, 255,   0};
@@ -125,191 +173,118 @@ const struct Colour Blue   = {  0,   0, 255};
 const struct Colour Yellow = {255,  90,   0};
 const struct Colour Purple = {255,   0, 150};
 const struct Colour Cyan   = {  0, 255, 255};
-
-// ############################################################################
-
-/*
-
-struct Colour make_single_colour_array(uint8_t numLEDs, uint8_t Red, uint8_t Green, uint8_t Blue) {
-
-	struct Colour LED_Data[numLEDs];
-
-	for (int i = 0; i < numLEDs; i++) {
-		LED_Data[i] = create_colour(Red, Green, Blue);
-	}
-
-	return LED_Data;
-}
-
-
-// Core Functions
-
-volatile uint8_t FLAG_DataSent = 0;
-
-
-
-// Based on this image https://en.wikipedia.org/wiki/HSL_and_HSV#/media/File:HSV-RGB-comparison.svg
-// Hue range is 0 - 1,535 ((256*6)-1)
-
-
-
-void HuetoRGB(uint8_t LEDnum, uint16_t Hue) {
-	// The rainbow is broken up into 6 bins, defined by when R, G, B start increasing or decreasing
-
-	if(Hue > 1535) {
-		Hue = Hue - 1536;
-	}
-
-	uint8_t Red = 0;
-	uint8_t Green = 0;
-	uint8_t Blue = 0;
-
-	uint8_t Bin = Hue / 256; // The rainbow is broken up into 6 bins, defined by when R, G, B start increasing or decreasing
-	uint8_t x = Hue % 256;  // How far along the bin you are
-
-	switch (Bin) {
-	case 0:
-		Red = 255;
-		Green = x;
-		break;
-	case 1:
-		Green = 255;
-		Red = 255 - x;
-		break;
-	case 2:
-		Green = 255;
-		Blue = x;
-		break;
-	case 3:
-		Blue = 255;
-		Green = 255 - x;
-		break;
-	case 4:
-		Blue = 255;
-		Red = x;
-		break;
-	case 5:
-		Red = 255;
-		Blue = 255 - x;
-		break;
-	default:
-		Red = 255;
-		Green = 255;
-		Blue = 255;
-	}
-
-	set_LED(LEDnum, Red, Green, Blue);
-
-}
-
-void set_LED (uint8_t LEDnum, uint8_t Red, uint8_t Green, uint8_t Blue) {
-	LED_Data[LEDnum][0] = Green;
-	LED_Data[LEDnum][1] = Red;
-	LED_Data[LEDnum][2] = Blue;
-}
-
-void set_all_LED(uint8_t Red, uint8_t Green, uint8_t Blue) {
-	for (int i = 0; i < MAX_LED; i++) {
-		set_LED(i, Red, Green, Blue);
-	}
-}
-
-
-
+const struct Colour White  = {255, 100, 100};
+const struct Colour Black  = {  0,   0,   0};
 
 
 // Patterns
 // Should be able to remove this section of the library
 // In other words, nothing here should be core functionality
 
-void cycle_RGB(void) {
+void Pattern_cycle_RGB(struct Colour *frame) {
 	while (1) {
-		set_all_LED(255, 0, 0);
-		WS2812C_Send();
+		set_colour_whole_frame(frame, Red);
+		send_frame(frame);
+		if (FLAG_BTN) return;
 		HAL_Delay(500);
 
-		set_all_LED(0, 255, 0);
-		WS2812C_Send();
+		set_colour_whole_frame(frame, Green);
+		send_frame(frame);
+		if (FLAG_BTN) return;
 		HAL_Delay(500);
 
-		set_all_LED(0, 0, 255);
-		WS2812C_Send();
+		set_colour_whole_frame(frame, Blue);
+		send_frame(frame);
+		if (FLAG_BTN) return;
 		HAL_Delay(500);
 	}
 }
+
 
 
 // implements a rainbow gradient as per
 // https://en.wikipedia.org/wiki/HSL_and_HSV#/media/File:HSV-RGB-comparison.svg
-void Rainbow(void) {
+void Pattern_RainbowGradient(struct Colour *frame) {
+	while (1) {
 
-	// All red as starting point
-	uint8_t Red = 255;
-	uint8_t Green = 0;
-	uint8_t Blue = 0;
-	uint32_t delay = 2;
+		uint32_t delay = 2;
 
-	set_all_LED(Red, Green, Blue);
-	WS2812C_Send();
+		// All red as starting point
+		struct Colour current_colour = { .Red = 255, .Green = 0, .Blue = 0 };
+		set_colour_whole_frame(frame, current_colour);
+		send_frame(frame);
 
-	// R max, G increasing
-	Blue = 0;
-	for (int i = 0; i < 256; i++) {
-		Green = i;
-		set_all_LED(Red, Green, Blue);
-		WS2812C_Send();
-		HAL_Delay(delay);
+		// R max, G increasing
+		current_colour.Red = 255;
+		current_colour.Blue = 0;
+		for (int i = 0; i < 256; i++) {
+			current_colour.Green = i;
+			set_colour_whole_frame(frame, current_colour);
+			send_frame(frame);
+			HAL_Delay(delay);
+			if (FLAG_BTN) return;
+		}
+
+		// G max, R decreasing
+		current_colour.Green = 255;
+		current_colour.Blue = 0;
+		for (int i = 0; i < 256; i++) {
+			current_colour.Red = 255 - i;
+			set_colour_whole_frame(frame, current_colour);
+			send_frame(frame);
+			HAL_Delay(delay);
+			if (FLAG_BTN) return;
+		}
+
+		// G max, B increasing
+		current_colour.Red = 0;
+		current_colour.Green = 255;
+		for (int i = 0; i < 256; i++) {
+			current_colour.Blue = i;
+			set_colour_whole_frame(frame, current_colour);
+			send_frame(frame);
+			HAL_Delay(delay);
+			if (FLAG_BTN) return;
+		}
+
+		// B max, G decreasing
+		current_colour.Red = 0;
+		current_colour.Blue = 255;
+		for (int i = 0; i < 256; i++) {
+			current_colour.Green = 255 - i;
+			set_colour_whole_frame(frame, current_colour);
+			send_frame(frame);
+			HAL_Delay(delay);
+			if (FLAG_BTN) return;
+		}
+
+		// B max, R increasing
+		current_colour.Green = 0;
+		current_colour.Blue = 255;
+		for (int i = 0; i < 256; i++) {
+			current_colour.Red = i;
+			set_colour_whole_frame(frame, current_colour);
+			send_frame(frame);
+			HAL_Delay(delay);
+			if (FLAG_BTN) return;
+		}
+
+		// R max, B decreasing
+		current_colour.Red = 255;
+		current_colour.Green = 0;
+		for (int i = 0; i < 256; i++) {
+			current_colour.Blue = 255 - i;
+			set_colour_whole_frame(frame, current_colour);
+			send_frame(frame);
+			HAL_Delay(delay);
+			if (FLAG_BTN) return;
+		}
 	}
-
-	// G max, R decreasing
-	Blue = 0;
-	for (int i = 0; i < 256; i++) {
-		Red = 255 - i;
-		set_all_LED(Red, Green, Blue);
-		WS2812C_Send();
-		HAL_Delay(delay);
-	}
-
-	// G max, B increasing
-	Red = 0;
-	for (int i = 0; i < 256; i++) {
-		Blue = i;
-		set_all_LED(Red, Green, Blue);
-		WS2812C_Send();
-		HAL_Delay(delay);
-	}
-
-	// B max, G decreasing
-	Red = 0;
-	for (int i = 0; i < 256; i++) {
-		Green = 255 - i;
-		set_all_LED(Red, Green, Blue);
-		WS2812C_Send();
-		HAL_Delay(delay);
-	}
-
-	// B max, R increasing
-	Green = 0;
-	for (int i = 0; i < 256; i++) {
-		Red = i;
-		set_all_LED(Red, Green, Blue);
-		WS2812C_Send();
-		HAL_Delay(delay);
-	}
-
-	// R max, B decreasing
-	Green = 0;
-	for (int i = 0; i < 256; i++) {
-		Blue = 255 - i;
-		set_all_LED(Red, Green, Blue);
-		WS2812C_Send();
-		HAL_Delay(delay);
-	}
-
 }
 
-
-void GradientRainbowDiag(void) {
+/*
+// !TODO Rewrite with new functions
+void Pattern_RainbowGradientDiag(void) {
 	while (1) {
 		for (uint16_t i = 0; i < 1536; i++) {
 			HuetoRGB(2, i + 160);
@@ -332,6 +307,4 @@ void GradientRainbowDiag(void) {
 		}
 	}
 }
-
-
 */
