@@ -56,6 +56,7 @@ void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
 extern volatile uint8_t FLAG_BTN;
+extern volatile uint32_t value_adc;
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/

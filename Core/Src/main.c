@@ -18,10 +18,11 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "lib_WS2812C.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+
+#include "lib_WS2812C.h"
 
 /* USER CODE END Includes */
 
@@ -42,12 +43,15 @@
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
+
 TIM_HandleTypeDef htim1;
 DMA_HandleTypeDef hdma_tim1_ch1;
 
 /* USER CODE BEGIN PV */
 
 volatile uint8_t FLAG_BTN = 0;
+
+volatile uint32_t value_adc = 0;
 
 /* USER CODE END PV */
 
@@ -104,7 +108,17 @@ int main(void)
   struct Colour frame[NUM_LEDS];
   clear_frame(frame);
 
+  HAL_ADCEx_Calibration_Start(&hadc1);
 
+  // !TODO Written by ChatGPT. Read through and understand/rewrite if needed.
+  uint8_t Read_ADC(void)
+  {
+      HAL_ADC_Start(&hadc1);
+      HAL_ADC_PollForConversion(&hadc1, 10);
+      uint8_t val = HAL_ADC_GetValue(&hadc1);
+      HAL_ADC_Stop(&hadc1);
+      return val;
+  }
 
   /* USER CODE END 2 */
 
@@ -112,12 +126,24 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 	while (1) {
 
+		set_colour_whole_frame(frame, Cyan);
+		send_frame(frame);
+
+		HAL_Delay(Read_ADC()*10);
+
+		set_colour_whole_frame(frame, Blue);
+		send_frame(frame);
+
+		HAL_Delay(Read_ADC()*10);
+
+		/*
 		Pattern_RainbowGradient(frame);
 		FLAG_BTN = 0;
 
 		Pattern_cycle_RGB(frame);
 		FLAG_BTN = 0;
 		// !TODO Create custom delay function that checks for FLAG_BTN?
+		*/
 
 
     /* USER CODE END WHILE */
@@ -186,10 +212,10 @@ static void MX_ADC1_Init(void)
   /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion)
   */
   hadc1.Instance = ADC1;
-  hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV2;
-  hadc1.Init.Resolution = ADC_RESOLUTION_12B;
+  hadc1.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV16;
+  hadc1.Init.Resolution = ADC_RESOLUTION_8B;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.ScanConvMode = ADC_SCAN_SEQ_FIXED;
+  hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
   hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
   hadc1.Init.LowPowerAutoWait = DISABLE;
   hadc1.Init.LowPowerAutoPowerOff = DISABLE;
@@ -201,6 +227,7 @@ static void MX_ADC1_Init(void)
   hadc1.Init.DMAContinuousRequests = DISABLE;
   hadc1.Init.Overrun = ADC_OVR_DATA_PRESERVED;
   hadc1.Init.SamplingTimeCommon1 = ADC_SAMPLETIME_1CYCLE_5;
+  hadc1.Init.SamplingTimeCommon2 = ADC_SAMPLETIME_1CYCLE_5;
   hadc1.Init.OversamplingMode = DISABLE;
   hadc1.Init.TriggerFrequencyMode = ADC_TRIGGER_FREQ_HIGH;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
@@ -211,7 +238,8 @@ static void MX_ADC1_Init(void)
   /** Configure Regular Channel
   */
   sConfig.Channel = ADC_CHANNEL_12;
-  sConfig.Rank = ADC_RANK_CHANNEL_NUMBER;
+  sConfig.Rank = ADC_REGULAR_RANK_1;
+  sConfig.SamplingTime = ADC_SAMPLINGTIME_COMMON_1;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();

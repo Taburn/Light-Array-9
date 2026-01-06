@@ -1,7 +1,16 @@
 #MicroXplorer Configuration settings - do not modify
-ADC1.IPParameters=NbrOfConversionFlag,master,SelectedChannel
-ADC1.NbrOfConversionFlag=0
+ADC1.Channel-1\#ChannelRegularConversion=ADC_CHANNEL_12
+ADC1.ClockPrescaler=ADC_CLOCK_ASYNC_DIV16
+ADC1.ContinuousConvMode=DISABLE
+ADC1.DMAContinuousRequests=DISABLE
+ADC1.IPParameters=NbrOfConversionFlag,master,SelectedChannel,ContinuousConvMode,Sequencer,Rank-1\#ChannelRegularConversion,Channel-1\#ChannelRegularConversion,SamplingTime-1\#ChannelRegularConversion,OffsetNumber-1\#ChannelRegularConversion,ClockPrescaler,DMAContinuousRequests,Resolution
+ADC1.NbrOfConversionFlag=1
+ADC1.OffsetNumber-1\#ChannelRegularConversion=ADC_OFFSET_NONE
+ADC1.Rank-1\#ChannelRegularConversion=1
+ADC1.Resolution=ADC_RESOLUTION_8B
+ADC1.SamplingTime-1\#ChannelRegularConversion=ADC_SAMPLINGTIME_COMMON_1
 ADC1.SelectedChannel=ADC_CHANNEL_12
+ADC1.Sequencer=FULLY_CONFIGURABLE
 ADC1.master=1
 CAD.formats=
 CAD.pinconfig=
