@@ -55,13 +55,16 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
-extern volatile uint8_t FLAG_BTN;
-extern volatile uint32_t value_adc;
+
+uint8_t Read_ADC(void);
+
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
 
 /* USER CODE BEGIN Private defines */
+
+extern volatile uint8_t FLAG_BTN;
 
 /* USER CODE END Private defines */
 

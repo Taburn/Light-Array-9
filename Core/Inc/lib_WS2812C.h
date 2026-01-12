@@ -31,12 +31,10 @@ struct Colour create_colour (uint8_t Red, uint8_t Green, uint8_t Blue);
 void clear_frame(struct Colour *frame);
 struct Colour HuetoRGB(uint16_t Hue);
 void set_colour_whole_frame(struct Colour *frame, struct Colour desired_colour);
-void set_colour_LED(struct Colour *frame, uint32_t LED_number, struct Colour desired_colour);
 void send_frame(struct Colour *frame);
 void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim);
 
 // Colour Definitions
-
 extern const struct Colour Red;
 extern const struct Colour Green;
 extern const struct Colour Blue;
@@ -48,10 +46,10 @@ extern const struct Colour Black;
 
 
 // Patterns
-
-void Pattern_cycle_RGB(struct Colour *frame);
+void Pattern_SingleColour(struct Colour *frame);
+void Pattern_CycleRGB(struct Colour *frame);
 void Pattern_RainbowGradient(struct Colour *frame);
-//void GradientRainbowDiag(void);
+void Pattern_RainbowGradientDiag(struct Colour *frame);
 
 
 #endif /* SRC_LIB_WS2812C_H_ */

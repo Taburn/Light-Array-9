@@ -43,15 +43,12 @@
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
-
 TIM_HandleTypeDef htim1;
 DMA_HandleTypeDef hdma_tim1_ch1;
 
 /* USER CODE BEGIN PV */
 
 volatile uint8_t FLAG_BTN = 0;
-
-volatile uint32_t value_adc = 0;
 
 /* USER CODE END PV */
 
@@ -67,6 +64,16 @@ static void MX_ADC1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+// ADC is configured as 8 bit (max return value = 255)
+uint8_t Read_ADC(void)
+{
+    HAL_ADC_Start(&hadc1);
+    HAL_ADC_PollForConversion(&hadc1, 10);
+    uint8_t val = HAL_ADC_GetValue(&hadc1);
+    HAL_ADC_Stop(&hadc1);
+    return val;
+}
 
 /* USER CODE END 0 */
 
@@ -104,21 +111,12 @@ int main(void)
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
 
-
+  // frame holds the colour data that's sent to the LEDs
+  // Edit it to have your desired colours and send it.
   struct Colour frame[NUM_LEDS];
   clear_frame(frame);
 
   HAL_ADCEx_Calibration_Start(&hadc1);
-
-  // !TODO Written by ChatGPT. Read through and understand/rewrite if needed.
-  uint8_t Read_ADC(void)
-  {
-      HAL_ADC_Start(&hadc1);
-      HAL_ADC_PollForConversion(&hadc1, 10);
-      uint8_t val = HAL_ADC_GetValue(&hadc1);
-      HAL_ADC_Stop(&hadc1);
-      return val;
-  }
 
   /* USER CODE END 2 */
 
@@ -126,25 +124,19 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 	while (1) {
 
-		set_colour_whole_frame(frame, Cyan);
-		send_frame(frame);
+		// Call each pattern you want in the rotation and clear FLAG_BTN after each one.
 
-		HAL_Delay(Read_ADC()*10);
+		Pattern_SingleColour(frame);
+		FLAG_BTN = 0;
 
-		set_colour_whole_frame(frame, Blue);
-		send_frame(frame);
+		Pattern_CycleRGB(frame);
+		FLAG_BTN = 0;
 
-		HAL_Delay(Read_ADC()*10);
-
-		/*
 		Pattern_RainbowGradient(frame);
 		FLAG_BTN = 0;
 
-		Pattern_cycle_RGB(frame);
+		Pattern_RainbowGradientDiag(frame);
 		FLAG_BTN = 0;
-		// !TODO Create custom delay function that checks for FLAG_BTN?
-		*/
-
 
     /* USER CODE END WHILE */
 
