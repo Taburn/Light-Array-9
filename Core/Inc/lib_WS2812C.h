@@ -50,6 +50,7 @@ void Pattern_SingleColour(struct Colour *frame);
 void Pattern_CycleRGB(struct Colour *frame);
 void Pattern_RainbowGradient(struct Colour *frame);
 void Pattern_RainbowGradientDiag(struct Colour *frame);
+void Pattern_RandomFade(struct Colour *frame);
 
 
 #endif /* SRC_LIB_WS2812C_H_ */

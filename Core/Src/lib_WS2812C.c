@@ -7,6 +7,7 @@
 
 #include "lib_WS2812C.h"
 #include "main.h"
+#include "stdlib.h"   // for rand()
 
 volatile uint8_t FLAG_DataSent = 0;
 
@@ -329,4 +330,58 @@ void Pattern_RainbowGradientDiag(struct Colour *frame) {
 		}
 	}
 }
+
+
+void Pattern_RandomFade(struct Colour *frame) {
+	uint8_t  brightness[NUM_LEDS];      // keeps track of how bright the colour is for each LED
+	uint32_t delay_period = 30;         // frame duration in milliseconds
+	uint8_t  new_LED_probability = 10;  // probability of a new LED every period = 1/new_LED_probability
+	uint8_t  brightness_decrease = 3;   // max brightness is 255
+
+	//initialize brightness
+	for (uint32_t i = 0; i < NUM_LEDS; i++) { brightness[i] = 0; }
+
+	// This sets the default/background colour
+	set_colour_whole_frame(frame, Black);
+	for (uint32_t i = 0; i < NUM_LEDS; i++) {
+		frame[i].Blue  = 100;
+	}
+
+	while (1) {
+
+		// decrease brightness of all LEDs by one step
+		for (uint32_t i = 0; i < NUM_LEDS; i++) {
+			if (brightness[i] <= brightness_decrease) {
+				brightness[i] = 0;
+			} else {
+				brightness[i] = brightness[i] - brightness_decrease;
+			}
+
+			//frame[i].Red   = brightness[i];
+			frame[i].Green = brightness[i];
+			//frame[i].Blue  = brightness[i];
+		}
+
+		// chance to pick a random LED (doesn't happen every frame)
+		if ((rand() % new_LED_probability) == 0) {
+
+			uint32_t chosen_LED = rand() % NUM_LEDS;
+			brightness[chosen_LED] = 255;
+
+			// Set it to full brightness
+			//frame[chosen_LED].Red   = 255;
+			frame[chosen_LED].Green = 255;
+			//frame[chosen_LED].Blue  = 255;
+
+		}
+
+		send_frame(frame);
+		if (FLAG_BTN) return;
+		HAL_Delay(delay_period);
+	}
+}
+
+
+
+
 

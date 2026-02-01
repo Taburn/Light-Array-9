@@ -138,6 +138,9 @@ int main(void)
 		Pattern_RainbowGradientDiag(frame);
 		FLAG_BTN = 0;
 
+		Pattern_RandomFade(frame);
+		FLAG_BTN = 0;
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
